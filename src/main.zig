@@ -2,10 +2,10 @@ const std = @import("std");
 const Window = @import("window.zig");
 const Render = @import("render/mod.zig");
 
-const name = "catchfire v0.1";
+const name = "catchfire v0.2.dev";
 
-const vert_src = @embedFile("shaders/xy_debug.vert");
-const frag_src = @embedFile("shaders/xy_debug.frag");
+const vert_src = @embedFile("shaders/rgb.vert");
+const frag_src = @embedFile("shaders/rgb.frag");
 
 pub fn main() !void {
     std.debug.print("{s}\n", .{name});
