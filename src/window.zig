@@ -14,9 +14,18 @@ pub const Error = error{
     CreateWindow,
 };
 
-pub fn init(name: [*]const u8) !Window {
+pub fn init(name: [*]const u8, dim: ?[2]i32) !Window {
     if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) return Error.InitSdl;
-    if (sdl.SDL_CreateWindow(name, sdl.SDL_WINDOWPOS_UNDEFINED, sdl.SDL_WINDOWPOS_UNDEFINED, 0, 0, sdl.SDL_WINDOW_SHOWN | sdl.SDL_WINDOW_OPENGL | sdl.SDL_WINDOW_FULLSCREEN_DESKTOP)) |window| {
+    const x = sdl.SDL_WINDOWPOS_UNDEFINED;
+    const y = sdl.SDL_WINDOWPOS_UNDEFINED;
+
+    const w = if (dim) |_dim| _dim[0] else 0;
+    const h = if (dim) |_dim| _dim[1] else 0;
+
+    const win_type: u32 = if (dim) |_| 0 else sdl.SDL_WINDOW_FULLSCREEN_DESKTOP;
+    const attrs: u32 = @as(u32, sdl.SDL_WINDOW_OPENGL) | win_type;
+
+    if (sdl.SDL_CreateWindow(name, x, y, w, h, attrs)) |window| {
         _ = sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MAJOR_VERSION, 4);
         _ = sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MINOR_VERSION, 6);
         const gfx = sdl.SDL_GL_CreateContext(window);

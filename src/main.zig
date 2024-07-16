@@ -9,7 +9,7 @@ const frag_src = @embedFile("shaders/rgb.frag");
 
 pub fn main() !void {
     std.debug.print("{s}\n", .{name});
-    const window = try Window.init(name);
+    const window = try Window.init(name, null);
     var draw_size = window.size();
     std.debug.print("window size: ({d}, {d})\n", .{ draw_size[0], draw_size[1] });
     defer window.drop();

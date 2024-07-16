@@ -9,7 +9,7 @@ const frag_src = @embedFile("shader.frag");
 
 pub fn main() !void {
     std.debug.print("{s}\n", .{name});
-    const window = try Window.init(name);
+    const window = try Window.init(name, .{ 800, 640 });
     defer window.drop();
 
     const fs_shader = Render.Shader.compile(vert_src, frag_src);
