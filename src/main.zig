@@ -1,6 +1,6 @@
 const std = @import("std");
-const Window = @import("window.zig");
-const Render = @import("render/mod.zig");
+const Window = @import("sdl").Window;
+const Render = @import("opengl");
 
 const name = "catchfire v0.2.dev";
 

@@ -1,6 +1,6 @@
 const std = @import("std");
-const Window = @import("window");
-const Render = @import("render");
+const Window = @import("sdl").Window;
+const Render = @import("opengl");
 
 const name = "debug-shader";
 

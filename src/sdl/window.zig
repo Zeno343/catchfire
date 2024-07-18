@@ -1,10 +1,6 @@
-const std = @import("std");
-const sdl = @cImport({
-    @cInclude("SDL2/SDL.h");
-    @cInclude("SDL2/SDL_opengl.h");
-});
-
 const Window = @This();
+const std = @import("std");
+const sdl = @import("sys.zig");
 
 window: *sdl.SDL_Window,
 gfx: sdl.SDL_GLContext,

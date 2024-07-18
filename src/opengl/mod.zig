@@ -1,4 +1,4 @@
-const gl = @import("gl_sys.zig");
+const gl = @import("sys.zig");
 pub const Shader = @import("shader.zig");
 pub usingnamespace @import("mesh.zig");
 pub usingnamespace @import("buffer.zig");

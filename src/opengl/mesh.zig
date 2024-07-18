@@ -1,5 +1,5 @@
 const std = @import("std");
-const gl = @import("gl_sys.zig");
+const gl = @import("sys.zig");
 const Buffer = @import("buffer.zig");
 
 pub const Topology = enum(gl.GLenum) {

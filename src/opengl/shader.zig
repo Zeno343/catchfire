@@ -1,6 +1,6 @@
 const Shader = @This();
 const std = @import("std");
-const gl = @import("gl_sys.zig");
+const gl = @import("sys.zig");
 
 pub const ShaderId = gl.GLuint;
 

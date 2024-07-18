@@ -4,10 +4,24 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const opts = b.standardOptimizeOption(.{});
 
-    const render = b.createModule(.{ .root_source_file = .{ .path = "src/render/mod.zig" } });
-    const window = b.createModule(.{ .root_source_file = .{ .path = "src/window.zig" } });
+    const opengl = b.createModule(.{
+        .target = target,
+        .root_source_file = .{ .path = "src/opengl/mod.zig" },
+    });
+    opengl.linkSystemLibrary("gl", .{});
 
-    const bin = b.addExecutable(.{ .name = "catchfire", .root_source_file = .{ .path = "src/main.zig" }, .target = target, .optimize = opts });
+    const sdl = b.createModule(.{
+        .target = target,
+        .root_source_file = .{ .path = "src/sdl/mod.zig" },
+    });
+    sdl.linkSystemLibrary("sdl2", .{});
+
+    const bin = b.addExecutable(.{
+        .name = "catchfire",
+        .root_source_file = .{ .path = "src/main.zig" },
+        .target = target,
+        .optimize = opts,
+    });
 
     const dbg_shader = b.addExecutable(.{
         .name = "debug-shader",
@@ -17,14 +31,9 @@ pub fn build(b: *std.Build) void {
     });
 
     for ([_]*std.Build.Step.Compile{ bin, dbg_shader }) |exe| {
-        exe.root_module.addImport("render", render);
-        exe.root_module.addImport("window", window);
-
+        exe.root_module.addImport("opengl", opengl);
+        exe.root_module.addImport("sdl", sdl);
         exe.linkLibC();
-        for ([_][]const u8{ "SDL2", "GL" }) |sys_lib| {
-            exe.linkSystemLibrary(sys_lib);
-        }
-
         b.installArtifact(exe);
     }
 
