@@ -1,5 +1,6 @@
 const std = @import("std");
-const Window = @import("sdl").Window;
+const sdl = @import("sdl");
+const Window = sdl.Window;
 const Render = @import("opengl");
 
 const name = "catchfire v0.2.dev";
@@ -8,6 +9,9 @@ const vert_src = @embedFile("shaders/rgb.vert");
 const frag_src = @embedFile("shaders/rgb.frag");
 
 pub fn main() !void {
+    const sdl_ctx = try sdl.init();
+    defer sdl_ctx.drop();
+
     std.debug.print("{s}\n", .{name});
     const window = try Window.init(name, null);
     var draw_size = window.size();

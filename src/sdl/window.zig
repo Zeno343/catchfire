@@ -5,13 +5,9 @@ const sdl = @import("sys.zig");
 window: *sdl.SDL_Window,
 gfx: sdl.SDL_GLContext,
 
-pub const Error = error{
-    InitSdl,
-    CreateWindow,
-};
+pub const Error = error{WindowInitFailed};
 
 pub fn init(name: [*]const u8, dim: ?[2]i32) !Window {
-    if (sdl.SDL_Init(sdl.SDL_INIT_VIDEO) != 0) return Error.InitSdl;
     const x = sdl.SDL_WINDOWPOS_UNDEFINED;
     const y = sdl.SDL_WINDOWPOS_UNDEFINED;
 
@@ -31,7 +27,7 @@ pub fn init(name: [*]const u8, dim: ?[2]i32) !Window {
             .window = window,
             .gfx = gfx,
         };
-    } else return Error.CreateWindow;
+    } else return Error.WindowInitFailed;
 }
 
 pub fn swap(self: *const Window) void {
@@ -57,7 +53,6 @@ pub fn poll(_: *const Window) ?Event {
 pub fn drop(self: *const Window) void {
     sdl.SDL_GL_DeleteContext(self.gfx);
     sdl.SDL_DestroyWindow(self.window);
-    sdl.SDL_Quit();
 
     std.debug.print("window dropped\n", .{});
 }
