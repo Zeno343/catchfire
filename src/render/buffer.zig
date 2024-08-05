@@ -2,7 +2,7 @@ const std = @import("std");
 const gl = @import("sys.zig");
 
 pub fn Buffer(comptime data: anytype) type {
-    return struct {
+    return extern struct {
         const Self = @This();
 
         const Id = gl.GLuint;

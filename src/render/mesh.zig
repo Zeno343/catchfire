@@ -19,7 +19,7 @@ pub const VertexAttr = struct {
     }
 };
 
-pub const Mesh = struct {
+pub const Mesh = extern struct {
     const Id = gl.GLuint;
     id: Id,
 
@@ -30,7 +30,7 @@ pub const Mesh = struct {
         return Mesh{ .id = id };
     }
 
-    pub fn with_vertex_attrs(self: *const Mesh, attrs: []const VertexAttr) *const Mesh {
+    pub fn with_vertex_attrs(self: Mesh, attrs: []const VertexAttr) Mesh {
         self.bind();
 
         var stride: gl.GLint = 0;

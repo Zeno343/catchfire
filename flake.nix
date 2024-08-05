@@ -11,7 +11,9 @@
       version = "v0.1";
       src = lib.cleanSource ./.;
       buildInputs = [ SDL2 ];
-      nativeBuildInputs = [ zig pkg-config glslang renderdoc ];
+      nativeBuildInputs = [ zig pkg-config emscripten wabt python3 ];
+
+      EMSCRIPTEN_SYSROOT = "${emscripten}/share/emscripten/cache/sysroot";
       buildPhase = ''
         zig build --global-cache-dir $(mktemp -d) -p $out
       '';

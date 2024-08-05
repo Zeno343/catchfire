@@ -9,8 +9,7 @@ const vert_src = @embedFile("shaders/rgb.vert");
 const frag_src = @embedFile("shaders/rgb.frag");
 
 pub fn main() !void {
-    const sdl_ctx = try sdl.init();
-    defer sdl_ctx.drop();
+    try sdl.init();
 
     std.debug.print("{s}\n", .{name});
     const window = try Window.init(name, null);
@@ -46,4 +45,5 @@ pub fn main() !void {
     }
 
     std.debug.print("exited main loop\n", .{});
+    sdl.drop();
 }
