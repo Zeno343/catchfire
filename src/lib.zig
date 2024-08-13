@@ -1,14 +1,11 @@
 const std = @import("std");
+const SDL = @import("sdl.zig");
 const Event = @import("event.zig");
 const Window = @import("window.zig").Window;
-const Render = @import("render/mod.zig").Render;
 
 const NAME = "catchfire v0.1";
-const VERT = @embedFile("shaders/rgb.vert");
-const FRAG = @embedFile("shaders/rgb.frag");
 
 pub const Runtime = extern struct {
-    const SDL = @import("c").SDL;
     pub const Err = error{
         SdlInit,
         WindowInit,
@@ -24,11 +21,15 @@ pub const Runtime = extern struct {
             return Err.WindowInit;
         };
 
-        std.debug.print("{s} window created\n", .{NAME});
         return .{ .window = window };
     }
 
     pub fn run(self: Runtime) bool {
+        // Draw the window
+        self.window.clear();
+        self.window.present();
+
+        // Handle incoming events
         while (Event.poll()) |event| {
             switch (event) {
                 .Quit => {
@@ -46,7 +47,6 @@ pub const Runtime = extern struct {
                 },
             }
         }
-
         return true;
     }
 

@@ -1,4 +1,4 @@
-const SDL = @import("c").SDL;
+const SDL = @import("sdl.zig");
 
 pub const Event = union(EventType) {
     Quit: void,

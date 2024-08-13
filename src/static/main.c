@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <emscripten.h>
+#include <emscripten/stack.h>
 #include "SDL2/SDL.h"
 
 extern int em_init();

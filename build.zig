@@ -1,48 +1,21 @@
 const std = @import("std");
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const opts = b.standardOptimizeOption(.{});
 
-    // Build wasm dependencies
-    const web_deps = b.addSystemCommand(&.{"emcc"});
-    web_deps.addArg("-c");
-    _ = web_deps.addFileArg(b.path("src/static/main.c"));
-    web_deps.addArg("--cache");
-    web_deps.addArg("cache");
-    web_deps.addArg("-sUSE_SDL=2");
-    web_deps.addArg("-o");
-    const main_o = web_deps.addOutputFileArg("main.o");
+    const cache = std.process.getEnvVarOwned(gpa.allocator(), "EM_CACHE") catch ".cache";
 
-    const web_main = b.addInstallLibFile(main_o, "main.o");
-    web_main.step.dependOn(&web_deps.step);
+    const build_wasm_main = b.addSystemCommand(&.{ "emcc", "--cache", cache });
+    build_wasm_main.addArgs(&.{ "--use-ports", "sdl2" });
+    build_wasm_main.addArg("-c");
+    build_wasm_main.addFileArg(b.path("src/static/main.c"));
+    build_wasm_main.addArg("-o");
+    const wasm_main = build_wasm_main.addOutputFileArg("main.wasm");
 
-    const web_headers = b.addInstallDirectory(
-        .{
-            .source_dir = b.path(b.pathJoin(&.{ "cache", "sysroot", "include" })),
-            .install_dir = .header,
-            .install_subdir = "",
-        },
-    );
-    web_headers.step.dependOn(&web_deps.step);
-
-    const web_libs = b.addInstallDirectory(.{
-        .source_dir = b.path(b.pathJoin(&.{ "cache", "sysroot", "lib", "wasm32-emscripten" })),
-        .install_dir = .lib,
-        .install_subdir = "",
-    });
-    web_libs.step.dependOn(&web_deps.step);
-
-    const c_deps = b.addModule(
-        "c",
-        .{
-            .root_source_file = b.path("src/c.zig"),
-        },
-    );
-    c_deps.addIncludePath(b.path("zig-out/include/"));
-
-    const lib = b.addStaticLibrary(.{
-        .name = "catchfire",
+    const ctcf_web = b.addStaticLibrary(.{
+        .name = "catchfire_web",
         .root_source_file = b.path("src/lib.zig"),
         .target = b.resolveTargetQuery(
             .{
@@ -52,25 +25,29 @@ pub fn build(b: *std.Build) void {
         ),
         .optimize = opts,
     });
-    lib.linkLibC();
-    lib.root_module.addImport("c", c_deps);
-    lib.step.dependOn(&web_headers.step);
-    lib.step.dependOn(&web_libs.step);
-    lib.addIncludePath(b.path("zig-out/include/"));
-    lib.addLibraryPath(b.path("zig-out/lib"));
-    b.installArtifact(lib);
+    ctcf_web.linkLibC();
+    ctcf_web.addIncludePath(.{ .cwd_relative = b.pathJoin(&.{
+        cache,
+        "sysroot",
+        "include",
+    }) });
+    ctcf_web.addLibraryPath(.{ .cwd_relative = b.pathJoin(&.{
+        cache,
+        "sysroot",
+        "lib",
+        "wasm32-emscripten",
+    }) });
+    ctcf_web.step.dependOn(&build_wasm_main.step);
+    b.installArtifact(ctcf_web);
 
-    const web = b.addSystemCommand(&.{"emcc"});
-    web.addFileArg(b.path("zig-out/lib/main.o"));
-    web.addArtifactArg(lib);
+    const web = b.addSystemCommand(&.{ "emcc", "--cache", cache });
+    web.addArgs(&.{ "--use-ports", "sdl2" });
+    web.addFileArg(wasm_main);
+    web.addArtifactArg(ctcf_web);
     web.addArg("-o");
-    web.addArg("index.html");
-    web.addArg("-sUSE_SDL=2");
-    web.addArg("--cache");
-    web.addArg("cache");
-
-    web.step.dependOn(&lib.step);
-    web.step.dependOn(&web_main.step);
+    web.addArg("zig-out/index.html");
+    web.step.dependOn(&build_wasm_main.step);
+    web.step.dependOn(&ctcf_web.step);
     b.step("web", "build wasm").dependOn(&web.step);
 
     const bin = b.addExecutable(.{
@@ -79,10 +56,10 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = opts,
     });
-
     bin.linkSystemLibrary("GL");
     bin.linkSystemLibrary("SDL2");
     bin.linkLibC();
+    b.installArtifact(bin);
 
     b.step("run", "run the catchfire engine").dependOn(&b.addRunArtifact(bin).step);
 }
