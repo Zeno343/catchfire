@@ -35,12 +35,11 @@
 
         nativeBuildInputs = [
           zig
-          SDL2
           pkg-config
           emscripten
         ];
 
-        SDL2_2_28_4 = fetchFromGitHub {
+        SDL2 = fetchFromGitHub {
           owner = "libsdl-org";
           repo = "SDL";
           rev = "release-2.28.4";
@@ -49,7 +48,6 @@
 
         buildPhase = ''
           export HOME=$(mktemp -d)
-          export EM_SYSROOT=$emscrpten/sysroot
           export EMCC_LOCAL_PORTS="sdl2=${SDL2}"
 
           mkdir -p $out/web
