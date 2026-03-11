@@ -4,6 +4,31 @@ const sdl = @cImport({
     @cInclude("SDL3/SDL_opengl.h");
 });
 
+const VERT_SOURCE = 
+\\ #version 300 es
+\\ precision highp float;
+\\ layout(location = 0) in vec2 position;
+\\ layout(location = 1) in vec3 vertexColor;
+\\
+\\ out vec3 color;
+\\
+\\ void main() {
+\\     gl_Position = vec4(position.xy, 0, 1);
+\\     color = vertexColor;
+\\ }
+;
+
+const FRAG_SOURCE = 
+\\ #version 300 es
+\\ precision highp float;
+\\ in vec3 color;
+\\ out vec4 fragColor;
+\\
+\\ void main() {
+\\   fragColor = vec4(color, 1.0);
+\\ }
+;
+
 const Engine = struct {
     const Event = struct {
         event: sdl.SDL_Event,
@@ -106,6 +131,65 @@ const Render = struct {
     pub fn viewport(x: i32, y: i32, w: i32, h: i32) void {
         gl.glViewport(x, y, w, h);
     }
+
+    const Shader = struct {
+        id: gl.GLuint,
+
+        const Source = struct {
+            id: gl.GLuint,
+            stage: Stage,
+
+            const Stage = enum(gl.GLenum) {
+                Vertex = gl.GL_VERTEX_SHADER,
+                Fragment = gl.GL_FRAGMENT_SHADER,
+            };
+
+            pub fn compile(src: [*]const u8, stage: Stage) Source {
+                const id = gl.glCreateShader(@intFromEnum(stage));
+                gl.glShaderSource(id, 1, &[_][*]const u8{src}, null);
+                gl.glCompileShader(id);
+
+                std.debug.print("compiled shader {d}\n", .{id});
+                return Source{
+                    .id = id,
+                    .stage = stage,
+                };
+            }
+
+            pub fn drop(self: Source) void {
+                gl.glDeleteShader(self.id);
+            }
+        };
+
+        pub fn compile(vert: [*]const u8, frag: [*]const u8) Shader {
+            const id = gl.glCreateProgram();
+            const vert_shader = Source.compile(vert, Source.Stage.Vertex);
+            const frag_shader = Source.compile(frag, Source.Stage.Fragment);
+            defer vert_shader.drop();
+            defer frag_shader.drop();
+
+            gl.glAttachShader(id, vert_shader.id);
+            gl.glAttachShader(id, frag_shader.id);
+            gl.glLinkProgram(id);
+
+            std.debug.print("compiled shader {d}\n", .{id});
+            return Shader{
+                .id = id,
+            };
+        }
+
+        pub fn getUniformLocation(self: Shader, uniform: [:0]const u8) c_int {
+            return gl.glGetUniformLocation(self.id, uniform);
+        }
+
+        pub fn bind(self: *const Shader) void {
+            gl.glUseProgram(self.id);
+        }
+
+        pub fn deinit(self: *const Shader) void {
+            gl.glDeleteProgram(self.id);
+        }
+    };
 };
 
 pub fn main() !void {
@@ -115,6 +199,9 @@ pub fn main() !void {
     const window = try GlWindow.init("catchfire", .{ 1920, 1080 });
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
+
+    const shader = Render.Shader.compile(VERT_SOURCE, FRAG_SOURCE);
+    shader.bind();
 
     Render.clear();
     try window.swap();
