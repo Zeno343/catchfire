@@ -4,30 +4,8 @@ const sdl = @cImport({
     @cInclude("SDL3/SDL_opengl.h");
 });
 
-const VERT_SOURCE = 
-\\ #version 300 es
-\\ precision highp float;
-\\ layout(location = 0) in vec2 position;
-\\ layout(location = 1) in vec3 vertexColor;
-\\
-\\ out vec3 color;
-\\
-\\ void main() {
-\\     gl_Position = vec4(position.xy, 0, 1);
-\\     color = vertexColor;
-\\ }
-;
-
-const FRAG_SOURCE = 
-\\ #version 300 es
-\\ precision highp float;
-\\ in vec3 color;
-\\ out vec4 fragColor;
-\\
-\\ void main() {
-\\   fragColor = vec4(color, 1.0);
-\\ }
-;
+const VERT_SOURCE = @embedFile("shaders/rgb.vert");
+const FRAG_SOURCE = @embedFile("shaders/rgb.frag");
 
 const Engine = struct {
     const Event = struct {
@@ -124,7 +102,7 @@ const Render = struct {
     });
 
     pub fn clear() void {
-        gl.glClearColor(1.0, 0.0, 0.0, 0.0);
+        gl.glClearColor(0.0, 0.0, 0.0, 0.0);
         gl.glClear(gl.GL_COLOR_BUFFER_BIT);
     }
 
@@ -190,7 +168,129 @@ const Render = struct {
             gl.glDeleteProgram(self.id);
         }
     };
+
+    pub fn Buffer(comptime data: anytype) type {
+        return packed struct {
+            const Self = @This();
+
+            const Id = gl.GLuint;
+            id: Id,
+
+            pub fn new() Self {
+                var id: Id = 0;
+                gl.glGenBuffers(1, &id);
+                std.debug.print("created buffer {d}\n", .{id});
+                return Self{ .id = id };
+            }
+
+            pub fn from_verts(verts: []const data) Self {
+                const buf = Self.new();
+                buf.bind();
+
+                gl.glBufferData(gl.GL_ARRAY_BUFFER, @intCast(verts.len * @sizeOf(data)), verts.ptr, gl.GL_STATIC_DRAW);
+                return buf;
+            }
+
+            pub fn bind(self: *const Self) void {
+                gl.glBindBuffer(gl.GL_ARRAY_BUFFER, self.id);
+            }
+
+            pub fn drop(self: *const Self) void {
+                gl.glDeleteBuffers(1, &self.id);
+            }
+        };
+    }
+
+    pub const Topology = enum(gl.GLenum) {
+        Triangles = gl.GL_TRIANGLES,
+        TriangleStrip = gl.GL_TRIANGLE_STRIP,
+        Points = gl.GL_POINTS,
+    };
+
+    pub const GlVertexType = enum(gl.GLenum) { Float = gl.GL_FLOAT, Uint = gl.GL_UNSIGNED_INT };
+
+    pub const VertexAttr = struct {
+        n_components: gl.GLint,
+        type: GlVertexType,
+
+        fn size(self: *const VertexAttr) gl.GLint {
+            const size_per_component: gl.GLint = switch (self.type) {
+                GlVertexType.Float => @sizeOf(f32),
+                GlVertexType.Uint => @sizeOf(u32),
+            };
+            return self.n_components * size_per_component;
+        }
+    };
+
+    pub const Mesh = packed struct {
+        const Id = gl.GLuint;
+        id: Id,
+
+        pub fn new() Mesh {
+            var id: Id = 0;
+            gl.glGenVertexArrays(1, &id);
+
+            return Mesh{ .id = id };
+        }
+
+        pub fn with_vertex_attrs(self: Mesh, attrs: []const VertexAttr) Mesh {
+            self.bind();
+
+            var stride: gl.GLint = 0;
+            for (attrs) |attr| {
+                stride += attr.size();
+            }
+            std.debug.print("calculated vertex stride: {d}\n", .{stride});
+
+            var offset: usize = 0;
+            for (0.., attrs) |idx, attr| {
+                switch (attr.type) {
+                    GlVertexType.Float => gl.glVertexAttribPointer(
+                        @intCast(idx),
+                        attr.n_components,
+                        @intFromEnum(attr.type),
+                        gl.GL_FALSE,
+                        stride,
+                        @ptrFromInt(offset),
+                    ),
+                    GlVertexType.Uint => gl.glVertexAttribIPointer(
+                        @intCast(idx),
+                        attr.n_components,
+                        @intFromEnum(attr.type),
+                        stride,
+                        @ptrFromInt(offset),
+                    ),
+                }
+                gl.glEnableVertexAttribArray(@intCast(idx));
+
+                std.debug.print(
+                    "enabled vertex with {d} components and offset {d}\n",
+                    .{ attr.n_components, offset },
+                );
+                offset += @intCast(attr.size());
+            }
+            return self;
+        }
+
+        pub fn bind(self: *const Mesh) void {
+            gl.glBindVertexArray(self.id);
+        }
+
+        pub fn draw(self: *const Mesh, start: i32, n: i32, topo: Topology) void {
+            self.bind();
+            if (topo == .Points) {
+                gl.glPointSize(50);
+            }
+            gl.glDrawArrays(@intFromEnum(topo), start, n);
+        }
+
+        pub fn drop(self: *const Mesh) void {
+            gl.glDeleteVertexArrays(1, &self.id);
+        }
+    };
 };
+
+const VertexType = struct { [2]f32, [3]f32 };
 
 pub fn main() !void {
     const engine = try Engine.init();
@@ -201,13 +301,31 @@ pub fn main() !void {
     defer window.deinit();
 
     const shader = Render.Shader.compile(VERT_SOURCE, FRAG_SOURCE);
-    shader.bind();
+    defer shader.deinit();
 
-    Render.clear();
-    try window.swap();
+    const verts = [_]VertexType{
+      .{ .{ 0.0, 0.5, }, .{ 1.0, 0.0, 0.0 } }, 
+      .{ .{ -0.5, -0.5, }, .{ 0.0, 1.0, 0.0 } }, 
+      .{ .{ 0.5, -0.5, }, .{ 0.0, 0.0, 1.0 } },
+    };
+    const vert_buf = Render.Buffer(VertexType).from_verts(&verts);
+    defer vert_buf.drop();
+
+    const mesh = Render.Mesh.new().with_vertex_attrs(&.{
+        Render.VertexAttr{ .n_components = 2, .type = Render.GlVertexType.Float },
+        Render.VertexAttr{ .n_components = 3, .type = Render.GlVertexType.Float },
+    });
+    defer mesh.drop();
 
     var quit = false;
     while (!quit) {
+        Render.clear();
+        vert_buf.bind();
+        mesh.bind();
+        shader.bind();
+        mesh.draw(0, 3, Render.Topology.Triangles);
+
+        try window.swap();
         while (engine.poll()) |event| {
             switch (event.type) {
                 .Quit => quit = true,

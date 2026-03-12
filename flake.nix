@@ -26,6 +26,8 @@
             zig
             pkg-config
             libGL
+
+	    glslang
           ];
 
 	  shellHook = ''
