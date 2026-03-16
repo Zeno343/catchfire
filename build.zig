@@ -14,6 +14,15 @@ pub fn build(b: *std.Build) void {
         .name = "catchfire",
         .root_module = main,
     });
+
+    const lib = b.addLibrary(.{
+        .name = "libCatchfire",
+        .root_module = main,
+    });
+    lib.linkSystemLibrary("sdl3");
+    lib.linkSystemLibrary("gl");
+    lib.linkLibC();
+
     bin.linkSystemLibrary("sdl3");
     bin.linkSystemLibrary("gl");
     bin.linkLibC();
