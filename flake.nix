@@ -12,7 +12,7 @@
 
       catchfire =
         with pkgs;
-        stdenv.mkDerivation rec {
+        stdenv.mkDerivation {
           name = "catchfire";
           inherit version;
 
@@ -28,6 +28,7 @@
             libGL
 
 	    glslang
+	    renderdoc
           ];
 
 	  shellHook = ''
