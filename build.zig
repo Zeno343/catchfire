@@ -55,6 +55,9 @@ pub fn build(b: *std.Build) void {
     const run_2_tris = b.addRunArtifact(tris);
     run.step.dependOn(&install.step);
     run_2_tris.step.dependOn(&install_2_tris.step);
+    if (b.args) |args| {
+        run_2_tris.addArgs(args);
+    }
 
     b.step("2_tris", "2 triangles").dependOn(&run_2_tris.step);
     b.step("run", "run the editor").dependOn(&run.step);
