@@ -27,7 +27,7 @@ pub fn main() !void {
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
 
-    var shader = Render.Shader.compile(VERT_SOURCE, contents.ptr);
+    var shader = try Render.Shader.compile(VERT_SOURCE, contents.ptr);
     defer shader.deinit();
 
     const verts = [_][2]f32{
@@ -69,7 +69,7 @@ pub fn main() !void {
 
             shader.deinit();
             const _contents = try _file.readToEndAlloc(arena.allocator(), std.math.maxInt(usize));
-            shader = Render.Shader.compile(VERT_SOURCE, _contents.ptr);
+            shader = Render.Shader.compile(VERT_SOURCE, _contents.ptr) catch shader;
         }
     }
 }

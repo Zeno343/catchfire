@@ -119,10 +119,16 @@ pub const Render = struct {
                 Fragment = gl.GL_FRAGMENT_SHADER,
             };
 
-            pub fn compile(src: [*]const u8, stage: Stage) Source {
+            pub fn compile(src: [*]const u8, stage: Stage) !Source {
                 const id = gl.glCreateShader(@intFromEnum(stage));
                 gl.glShaderSource(id, 1, &[_][*]const u8{src}, null);
                 gl.glCompileShader(id);
+
+                var isCompiled: gl.GLint = 0;
+                gl.glGetShaderiv(id, gl.GL_COMPILE_STATUS, &isCompiled);
+                if(isCompiled == gl.GL_FALSE) {
+                    return error.ShaderCompilationError;
+                }
 
                 std.debug.print("compiled shader {d}\n", .{id});
                 return Source{
@@ -136,10 +142,10 @@ pub const Render = struct {
             }
         };
 
-        pub fn compile(vert: [*]const u8, frag: [*]const u8) Shader {
+        pub fn compile(vert: [*]const u8, frag: [*]const u8) !Shader {
             const id = gl.glCreateProgram();
-            const vert_shader = Source.compile(vert, Source.Stage.Vertex);
-            const frag_shader = Source.compile(frag, Source.Stage.Fragment);
+            const vert_shader = try Source.compile(vert, Source.Stage.Vertex);
+            const frag_shader = try Source.compile(frag, Source.Stage.Fragment);
             defer vert_shader.drop();
             defer frag_shader.drop();
 
@@ -286,4 +292,3 @@ pub const Render = struct {
         }
     };
 };
-
