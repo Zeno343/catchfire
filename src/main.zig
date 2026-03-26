@@ -1,5 +1,4 @@
 const std = @import("std");
-
 const ctcf = @import("catchfire");
 const Render = ctcf.Render;
 const Engine = ctcf.Engine;
@@ -18,7 +17,7 @@ pub fn main() !void {
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
 
-    const shader = Render.Shader.compile(VERT_SOURCE, FRAG_SOURCE);
+    const shader = try Render.Shader.compile(VERT_SOURCE, FRAG_SOURCE);
     defer shader.deinit();
 
     const verts = [_]VertexType{
