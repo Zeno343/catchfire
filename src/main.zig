@@ -3,6 +3,7 @@ const ctcf = @import("catchfire");
 const Render = ctcf.Render;
 const Engine = ctcf.Engine;
 const GlWindow = ctcf.GlWindow;
+const Gui = @import("cimgui").Gui;
 
 const VERT_SOURCE = @embedFile("shaders/rgb.vert");
 const FRAG_SOURCE = @embedFile("shaders/rgb.frag");
@@ -16,6 +17,9 @@ pub fn main() !void {
     const window = try GlWindow.init("catchfire", .{ 1920, 1080 });
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
+
+    const gui = try Gui.init(@ptrCast(window.window), @ptrCast(window.gfx));
+    defer gui.deinit();
 
     const shader = try Render.Shader.compile(VERT_SOURCE, FRAG_SOURCE);
     defer shader.deinit();

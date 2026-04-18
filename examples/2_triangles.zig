@@ -3,6 +3,7 @@ const std = @import("std");
 const ctcf = @import("catchfire");
 const Engine = ctcf.Engine;
 const Render = ctcf.Render;
+const Uniform = Render.Uniform;
 const GlWindow = ctcf.GlWindow;
 
 const VERT_SOURCE = @embedFile("passthru.vert");
@@ -23,7 +24,7 @@ pub fn main() !void {
     const engine = try Engine.init();
     defer engine.deinit();
 
-    const window = try GlWindow.init("2_triangles", .{ 600, 480 });
+    const window = try GlWindow.init("shader view", .{ 600, 480 });
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
 
@@ -45,11 +46,15 @@ pub fn main() !void {
     defer mesh.drop();
 
     var quit = false;
+    var time: u64 = 0; 
     while (!quit) {
         Render.clear();
-        vert_buf.bind();
-        mesh.bind();
+
         shader.bind();
+        time = engine.time();
+        Uniform.float(0, @floatFromInt(time));
+
+        mesh.bind();
         mesh.draw(0, 3, Render.Topology.Triangles);
 
         try window.swap();

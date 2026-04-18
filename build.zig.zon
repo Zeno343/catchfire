@@ -1,0 +1,11 @@
+.{
+    .name = .catchfire,
+    .version = "0.15.2",
+    .dependencies = .{
+        .cimgui = .{
+            .path = "./cimgui/",
+        },
+    },
+    .paths = .{""},
+    .fingerprint = 0xd9396a79e34a9cfb,
+}

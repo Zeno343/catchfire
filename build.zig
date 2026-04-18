@@ -4,22 +4,25 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const bin = b.addExecutable(.{ 
-        .name = "catchfire", 
-        .root_module = b.addModule("catchfire", .{ 
+    const cimgui = b.dependency("cimgui", .{});
+
+    const bin = b.addExecutable(.{
+        .name = "catchfire",
+        .root_module = b.addModule("catchfire", .{
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
         }),
     });
-
-    const lib = b.addLibrary(.{ 
-        .name = "catchfire", 
-        .root_module = b.addModule("catchfire", .{
+    const catchfire = b.addModule("catchfire", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
-      }), 
+    });
+
+    const lib = b.addLibrary(.{
+        .name = "catchfire",
+        .root_module = catchfire,
     });
     lib.linkSystemLibrary("sdl3");
     lib.linkSystemLibrary("gl");
@@ -40,6 +43,7 @@ pub fn build(b: *std.Build) void {
 
     bin.linkSystemLibrary("sdl3");
     bin.linkSystemLibrary("gl");
+    bin.root_module.addImport("cimgui", cimgui.module("cimgui"));
     bin.root_module.addImport("catchfire", lib.root_module);
     bin.linkLibC();
 

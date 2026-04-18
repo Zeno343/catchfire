@@ -37,6 +37,10 @@ pub const Engine = struct {
             return null;
         }
     }
+
+    pub fn time(_: Engine) u64 {
+        return sdl.SDL_GetTicks();
+    }
 };
 
 pub const GlWindow = extern struct {

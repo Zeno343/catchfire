@@ -201,7 +201,7 @@ pub const Mesh = packed struct {
 };
 
 pub const Uniform = struct {
-    pub fn float(location: gl.GLunit, uniform: f32) void {
+    pub fn float(location: gl.GLint, uniform: f32) void {
         gl.glUniform1f(location, uniform);
     }
 };
