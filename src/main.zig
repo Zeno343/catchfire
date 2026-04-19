@@ -25,9 +25,18 @@ pub fn main() !void {
     defer shader.deinit();
 
     const verts = [_]VertexType{
-      .{ .{ 0.0, 0.5, }, .{ 1.0, 0.0, 0.0 } }, 
-      .{ .{ -0.5, -0.5, }, .{ 0.0, 1.0, 0.0 } }, 
-      .{ .{ 0.5, -0.5, }, .{ 0.0, 0.0, 1.0 } },
+        .{ .{
+            0.0,
+            0.5,
+        }, .{ 1.0, 0.0, 0.0 } },
+        .{ .{
+            -0.5,
+            -0.5,
+        }, .{ 0.0, 1.0, 0.0 } },
+        .{ .{
+            0.5,
+            -0.5,
+        }, .{ 0.0, 0.0, 1.0 } },
     };
     const vert_buf = Render.Buffer(VertexType).from_verts(&verts);
     defer vert_buf.drop();
@@ -46,11 +55,15 @@ pub fn main() !void {
         shader.bind();
         mesh.draw(0, 3, Render.Topology.Triangles);
 
+        gui.draw();
+
         try window.swap();
         while (engine.poll()) |event| {
             switch (event.type) {
                 .Quit => quit = true,
-                _ => {},
+                _ => {
+                    gui.handleEvent(@constCast(&event.event));
+                },
             }
         }
     }

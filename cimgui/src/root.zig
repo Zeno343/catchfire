@@ -12,20 +12,43 @@ const sdl = @cImport({
 
 pub const Gui = struct {
     ctx: *cimgui.ImGuiContext,
+    io: *cimgui.ImGuiIO,
 
     pub fn init(window: *anyopaque, gfx: *anyopaque) !Gui {
         const ctx = cimgui.igCreateContext(null).?;
         _ = cimgui.ImGui_ImplSDL3_InitForOpenGL(@ptrCast(window), @ptrCast(gfx));
-        _ = cimgui.ImGui_ImplOpenGL3_Init("#version 330 ES");
+        _ = cimgui.ImGui_ImplOpenGL3_Init("#version 330");
+        const io = cimgui.igGetIO_Nil();
+        io.*.DisplaySize = .{
+            .x = 1920,
+            .y = 1080,
+        };
 
         return .{
             .ctx = ctx,
+            .io = io,
         };
+    }
+    
+    pub fn handleEvent(_: Gui, event: *anyopaque) void {
+        _ = cimgui.ImGui_ImplSDL3_ProcessEvent(@ptrCast(event));
+    }
+
+    pub fn draw(_: Gui) void {
+        cimgui.ImGui_ImplOpenGL3_NewFrame();
+        cimgui.ImGui_ImplSDL3_NewFrame();
+        cimgui.igNewFrame();
+        _ = cimgui.igBegin("hello menu", null, 0);
+        cimgui.igText("Hello World!");
+        cimgui.igEnd();
+        cimgui.igRender();
+        cimgui.ImGui_ImplOpenGL3_RenderDrawData(cimgui.igGetDrawData());
     }
 
     pub fn deinit(self: Gui) void {
         cimgui.ImGui_ImplOpenGL3_Shutdown();
         cimgui.ImGui_ImplSDL3_Shutdown();
+        cimgui.igShutdown();
         cimgui.igDestroyContext(self.ctx);
     }
 };
