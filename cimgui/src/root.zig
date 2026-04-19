@@ -1,4 +1,4 @@
-const cimgui = @cImport({
+pub const cimgui = @cImport({
     @cDefine("CIMGUI_DEFINE_ENUMS_AND_STRUCTS", "1");
     @cDefine("CIMGUI_USE_SDL3", "1");
     @cDefine("CIMGUI_USE_OPENGL3", "1");
@@ -34,13 +34,20 @@ pub const Gui = struct {
         _ = cimgui.ImGui_ImplSDL3_ProcessEvent(@ptrCast(event));
     }
 
-    pub fn draw(_: Gui) void {
+    pub fn frame(_: Gui) void {
         cimgui.ImGui_ImplOpenGL3_NewFrame();
         cimgui.ImGui_ImplSDL3_NewFrame();
         cimgui.igNewFrame();
+    }
+
+    pub fn sliderMenu(_: Gui, x: *f32, y: *f32) void {
         _ = cimgui.igBegin("hello menu", null, 0);
-        cimgui.igText("Hello World!");
+        _ = cimgui.igSliderFloat("x:", x, -1.0, 1.0, "%.3f", 1.0);
+        _ = cimgui.igSliderFloat("y:", y, -1.0, 1.0, "%.3f", 1.0);
         cimgui.igEnd();
+    }
+
+    pub fn draw(_: Gui) void {
         cimgui.igRender();
         cimgui.ImGui_ImplOpenGL3_RenderDrawData(cimgui.igGetDrawData());
     }

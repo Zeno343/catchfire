@@ -1,9 +1,13 @@
 const std = @import("std");
 const ctcf = @import("catchfire");
 const Render = ctcf.Render;
+const Uniform = Render.Uniform;
+
 const Engine = ctcf.Engine;
 const GlWindow = ctcf.GlWindow;
+
 const Gui = @import("cimgui").Gui;
+const cimgui = @import("cimgui").cimgui;
 
 const VERT_SOURCE = @embedFile("shaders/rgb.vert");
 const FRAG_SOURCE = @embedFile("shaders/rgb.frag");
@@ -25,18 +29,9 @@ pub fn main() !void {
     defer shader.deinit();
 
     const verts = [_]VertexType{
-        .{ .{
-            0.0,
-            0.5,
-        }, .{ 1.0, 0.0, 0.0 } },
-        .{ .{
-            -0.5,
-            -0.5,
-        }, .{ 0.0, 1.0, 0.0 } },
-        .{ .{
-            0.5,
-            -0.5,
-        }, .{ 0.0, 0.0, 1.0 } },
+        .{ .{ 0.0, 0.5 }, .{ 1.0, 0.0, 0.0 } },
+        .{ .{ -0.5, -0.5 }, .{ 0.0, 1.0, 0.0 } },
+        .{ .{ 0.5, -0.5 }, .{ 0.0, 0.0, 1.0 } },
     };
     const vert_buf = Render.Buffer(VertexType).from_verts(&verts);
     defer vert_buf.drop();
@@ -48,13 +43,17 @@ pub fn main() !void {
     defer mesh.drop();
 
     var quit = false;
+    var position = [2]f32{ 0.0, 0.0 };
     while (!quit) {
         Render.clear();
         vert_buf.bind();
         mesh.bind();
         shader.bind();
+        Uniform.vec2(0, &position);
         mesh.draw(0, 3, Render.Topology.Triangles);
 
+        gui.frame();
+        gui.sliderMenu(&position[0], &position[1]);
         gui.draw();
 
         try window.swap();

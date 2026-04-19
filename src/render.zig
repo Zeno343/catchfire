@@ -204,4 +204,8 @@ pub const Uniform = struct {
     pub fn float(location: gl.GLint, uniform: f32) void {
         gl.glUniform1f(location, uniform);
     }
+
+    pub fn vec2(location: gl.GLint, uniform: []f32) void {
+        gl.glUniform2fv(location, 1, uniform.ptr);
+    }
 };
