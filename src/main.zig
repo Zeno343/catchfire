@@ -63,6 +63,22 @@ pub fn main() !void {
                 .KeyDown => {
                     const key: ctcf.Keycode = @enumFromInt(event.event.key.key);
                     std.debug.print("key down: {}\n", .{key});
+                    switch (key) {
+                        .RIGHT => {
+                            position[0] += 0.1;
+                        },
+                        .LEFT => {
+                            position[0] -= 0.1;
+                        },
+                        .UP => {
+                            position[1] += 0.1;
+                        },
+                        .DOWN => {
+                            position[1] -= 0.1;
+                        },
+
+                        else => {},
+                    }
                 },
                 _ => {
                     gui.handleEvent(@constCast(&event.event));
