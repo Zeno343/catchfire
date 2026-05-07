@@ -3,13 +3,51 @@ const sdl = @cImport({
     @cInclude("SDL3/SDL.h");
     @cInclude("SDL3/SDL_opengl.h");
 });
+
+const sdlKeycode = @cImport({
+    @cInclude("SDL3/SDL_keycode.h");
+});
+
 pub const Render = @import("render.zig");
+
+pub const KeyboardEvent = sdl.SDL_KeyboardEvent;
+
+fn buildEnumFromC(comptime import: anytype, comptime prefix: []const u8) type {
+    comptime var enum_fields: [1000]std.builtin.Type.EnumField = undefined;
+    comptime var count: usize = 0;
+
+    inline for (std.meta.declarations(import)) |decl| {
+        if (decl.name.len < prefix.len + 1) continue;
+        
+        @setEvalBranchQuota(1000000);
+        
+        if (std.mem.eql(u8, decl.name[0..prefix.len], prefix)) {
+            const name = decl.name[prefix.len..];
+            const value = @field(import, decl.name);
+            
+            enum_fields[count] = .{ .name = name, .value = value };
+            count += 1;
+        }
+    }
+
+    return @Type(.{
+        .@"enum" = .{
+            .tag_type = u32,
+            .fields = enum_fields[0..count],
+            .decls = &.{},
+            .is_exhaustive = true,
+        }
+    });
+}
+
+pub const Keycode = buildEnumFromC(sdlKeycode, "SDLK_");
 
 pub const Engine = struct {
     const Event = struct {
         event: sdl.SDL_Event,
         type: enum(u32) {
             Quit = sdl.SDL_EVENT_QUIT,
+            KeyDown = sdl.SDL_EVENT_KEY_DOWN,
             _,
         },
     };

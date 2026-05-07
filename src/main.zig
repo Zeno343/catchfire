@@ -2,7 +2,7 @@ const std = @import("std");
 const ctcf = @import("catchfire");
 const Render = ctcf.Render;
 const Uniform = Render.Uniform;
-
+const KeyboardEvent = ctcf.KeyboardEvent;
 const Engine = ctcf.Engine;
 const GlWindow = ctcf.GlWindow;
 
@@ -60,6 +60,10 @@ pub fn main() !void {
         while (engine.poll()) |event| {
             switch (event.type) {
                 .Quit => quit = true,
+                .KeyDown => {
+                    const key: ctcf.Keycode = @enumFromInt(event.event.key.key);
+                    std.debug.print("key down: {}\n", .{key});
+                },
                 _ => {
                     gui.handleEvent(@constCast(&event.event));
                 },
