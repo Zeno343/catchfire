@@ -10,7 +10,8 @@ const Gui = @import("cimgui").Gui;
 const cimgui = @import("cimgui").cimgui;
 
 const VERT_SOURCE = @embedFile("shaders/rgb.vert");
-const FRAG_SOURCE = @embedFile("shaders/rgb.frag");
+const FRAG_SOURCE = @embedFile("shaders/uv.frag");
+const RESOLUTION = [2]i32{ 1920, 1080 };
 
 const VertexType = struct { [2]f32, [3]f32 };
 
@@ -18,7 +19,7 @@ pub fn main() !void {
     const engine = try Engine.init();
     defer engine.deinit();
 
-    const window = try GlWindow.init("catchfire", .{ 1920, 1080 });
+    const window = try GlWindow.init("catchfire", &RESOLUTION);
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
 
@@ -29,10 +30,11 @@ pub fn main() !void {
     defer shader.deinit();
 
     const verts = [_]VertexType{
-        .{ .{ 0.0, 0.5 }, .{ 1.0, 0.0, 0.0 } },
-        .{ .{ -0.5, -0.5 }, .{ 0.0, 1.0, 0.0 } },
-        .{ .{ 0.5, -0.5 }, .{ 0.0, 0.0, 1.0 } },
+        .{ .{ -1.0, 1.0 },  .{ 1.0, 0.0, 0.0 } },
+        .{ .{ 5.0, 1.0 },   .{ 0.0, 1.0, 0.0 } },
+        .{ .{ -5.0, -5.0 }, .{ 0.0, 0.0, 1.0 } },
     };
+
     const vert_buf = Render.Buffer(VertexType).from_verts(&verts);
     defer vert_buf.drop();
 
@@ -49,7 +51,8 @@ pub fn main() !void {
         vert_buf.bind();
         mesh.bind();
         shader.bind();
-        Uniform.vec2(0, &position);
+        shader.vec2("offset", &position);
+        shader.ivec2("resolution", &RESOLUTION);
         mesh.draw(0, 3, Render.Topology.Triangles);
 
         gui.frame();
@@ -80,10 +83,11 @@ pub fn main() !void {
                         else => {},
                     }
                 },
-                _ => {
-                    gui.handleEvent(@constCast(&event.event));
-                },
+
+                _ => {},
             }
+
+            gui.handleEvent(@constCast(&event.event));
         }
     }
 }

@@ -93,14 +93,17 @@ pub const GlWindow = extern struct {
         SizeError,
     };
 
-    pub fn init(name: [*]const u8, size: ?[2]i32) !GlWindow {
-        const _size = size orelse .{ 0, 0 };
-        var w = _size[0];
-        var h = _size[1];
+    pub fn init(name: [*]const u8, size: ?[]const i32) !GlWindow {
+        var win_type: u32 = sdl.SDL_WINDOW_FULLSCREEN;
+        var w: i32 = 0;
+        var h: i32 = 0;
+        if (size) |_size| {
+            win_type = 0;
+            w = _size[0];
+            h = _size[1];
+        }
 
-        const win_type: u32 = if (size) |_| 0 else sdl.SDL_WINDOW_FULLSCREEN;
         const attrs: u32 = @as(u32, sdl.SDL_WINDOW_OPENGL) | win_type;
-
         if (sdl.SDL_CreateWindow(name, w, h, attrs)) |window| {
             _ = sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MAJOR_VERSION, 3);
             _ = sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -108,7 +111,7 @@ pub const GlWindow = extern struct {
             std.debug.print("window initialized\n", .{});
 
             _ = sdl.SDL_SyncWindow(window);
-            if (!sdl.SDL_GetWindowSizeInPixels(window, &w, &h) or (w != _size[0]) or (h != _size[1]))
+            if (!sdl.SDL_GetWindowSizeInPixels(window, &w, &h))
                 return Error.SizeError;
 
             return GlWindow{

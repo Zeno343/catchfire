@@ -78,6 +78,21 @@ pub const Shader = struct {
     pub fn deinit(self: *const Shader) void {
         gl.glDeleteProgram(self.id);
     }
+
+    pub fn float(self: Shader, name: [*]const u8, uniform: f32) void {
+        const location = gl.glGetUniformLocation(self.id, name);
+        gl.glUniform1f(location, uniform);
+    }
+
+    pub fn vec2(self: Shader, name: [*]const u8, uniform: [*]const f32) void {
+        const location = gl.glGetUniformLocation(self.id, name);
+        gl.glUniform2fv(location, 1, uniform);
+    }
+
+    pub fn ivec2(self: Shader, name: [*]const u8, uniform: [*]const i32) void {
+        const location = gl.glGetUniformLocation(self.id, name);
+        gl.glUniform2iv(location, 1, uniform);
+    }
 };
 
 pub fn Buffer(comptime data: anytype) type {
@@ -197,15 +212,5 @@ pub const Mesh = packed struct {
 
     pub fn drop(self: *const Mesh) void {
         gl.glDeleteVertexArrays(1, &self.id);
-    }
-};
-
-pub const Uniform = struct {
-    pub fn float(location: gl.GLint, uniform: f32) void {
-        gl.glUniform1f(location, uniform);
-    }
-
-    pub fn vec2(location: gl.GLint, uniform: []f32) void {
-        gl.glUniform2fv(location, 1, uniform.ptr);
     }
 };
