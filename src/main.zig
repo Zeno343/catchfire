@@ -10,12 +10,18 @@ const Gui = @import("cimgui").Gui;
 const cimgui = @import("cimgui").cimgui;
 
 const VERT_SOURCE = @embedFile("shaders/rgb.vert");
-const FRAG_SOURCE = @embedFile("shaders/uv.frag");
-const RESOLUTION = [2]i32{ 1920, 1080 };
+const RESOLUTION = [2]i32{ 600, 480 };
 
 const VertexType = struct { [2]f32, [3]f32 };
 
 pub fn main() !void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.c_allocator);
+    defer arena.deinit();
+
+    var args = std.process.args();
+    _ = args.next();
+    const file_name = if (args.next()) |file| file else "src/shaders/color.frag";
+
     const engine = try Engine.init();
     defer engine.deinit();
 
@@ -26,8 +32,11 @@ pub fn main() !void {
     const gui = try Gui.init(@ptrCast(window.window), @ptrCast(window.gfx));
     defer gui.deinit();
 
-    const shader = try Render.Shader.compile(VERT_SOURCE, FRAG_SOURCE);
+    const file = try std.fs.cwd().openFile(file_name, .{});
+    const contents = try file.readToEndAlloc(arena.allocator(), std.math.maxInt(usize));
+    var shader = try Render.Shader.compile(VERT_SOURCE, contents.ptr);
     defer shader.deinit();
+    file.close();
 
     const verts = [_]VertexType{
         .{ .{ -1.0, 1.0 },  .{ 1.0, 0.0, 0.0 } },
@@ -45,18 +54,32 @@ pub fn main() !void {
     defer mesh.drop();
 
     var quit = false;
-    var position = [2]f32{ 0.0, 0.0 };
+    // var position = [2]f32{ 0.0, 0.0 };
+    var rgb = [3]f32{ 0.0, 0.0, 0.0 };
+    var mtime: i128 = 0;
     while (!quit) {
+        const stat = try std.fs.cwd().statFile(file_name);
+
+        if (mtime != stat.mtime) {
+            mtime = stat.mtime;
+            std.debug.print("file changed\n", .{});
+
+            const _file = try std.fs.cwd().openFile(file_name, .{});
+            const _contents = try file.readToEndAlloc(arena.allocator(), std.math.maxInt(usize));
+            shader = Render.Shader.compile(VERT_SOURCE, _contents.ptr) catch shader;
+            _file.close();
+        }
+
         Render.clear();
         vert_buf.bind();
         mesh.bind();
         shader.bind();
-        shader.vec2("offset", &position);
+        shader.vec3("rgb", &rgb);
         shader.ivec2("resolution", &RESOLUTION);
         mesh.draw(0, 3, Render.Topology.Triangles);
 
         gui.frame();
-        gui.sliderMenu(&position[0], &position[1]);
+        gui.rgbSlider(&rgb);
         gui.draw();
 
         try window.swap();
@@ -68,16 +91,16 @@ pub fn main() !void {
                     std.debug.print("key down: {}\n", .{key});
                     switch (key) {
                         .RIGHT => {
-                            position[0] += 0.1;
+                            // position[0] += 0.1;
                         },
                         .LEFT => {
-                            position[0] -= 0.1;
+                            // position[0] -= 0.1;
                         },
                         .UP => {
-                            position[1] += 0.1;
+                            // position[1] += 0.1;
                         },
                         .DOWN => {
-                            position[1] -= 0.1;
+                            // position[1] -= 0.1;
                         },
 
                         else => {},

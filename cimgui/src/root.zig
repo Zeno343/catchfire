@@ -40,10 +40,11 @@ pub const Gui = struct {
         cimgui.igNewFrame();
     }
 
-    pub fn sliderMenu(_: Gui, x: *f32, y: *f32) void {
-        _ = cimgui.igBegin("hello menu", null, 0);
-        _ = cimgui.igSliderFloat("x:", x, -1.0, 1.0, "%.3f", 1.0);
-        _ = cimgui.igSliderFloat("y:", y, -1.0, 1.0, "%.3f", 1.0);
+    pub fn rgbSlider(_: Gui, rgb: *[3]f32) void {
+        _ = cimgui.igBegin("rgb", null, 0);
+        _ = cimgui.igSliderFloat("r:", &rgb[0], 0.0, 1.0, "%.3f", 1.0);
+        _ = cimgui.igSliderFloat("g:", &rgb[1], 0.0, 1.0, "%.3f", 1.0);
+        _ = cimgui.igSliderFloat("b:", &rgb[2], 0.0, 1.0, "%.3f", 1.0);
         cimgui.igEnd();
     }
 

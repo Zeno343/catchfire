@@ -50,7 +50,7 @@ pub const Shader = struct {
         }
     };
 
-    pub fn compile(vert: [*]const u8, frag: [*]const u8) !Shader {
+    pub fn compile(vert: [*]const u8, frag: [*]u8) !Shader {
         const id = gl.glCreateProgram();
         const vert_shader = try Source.compile(vert, Source.Stage.Vertex);
         const frag_shader = try Source.compile(frag, Source.Stage.Fragment);
@@ -87,6 +87,11 @@ pub const Shader = struct {
     pub fn vec2(self: Shader, name: [*]const u8, uniform: [*]const f32) void {
         const location = gl.glGetUniformLocation(self.id, name);
         gl.glUniform2fv(location, 1, uniform);
+    }
+
+    pub fn vec3(self: Shader, name: [*]const u8, uniform: [*]const f32) void {
+        const location = gl.glGetUniformLocation(self.id, name);
+        gl.glUniform3fv(location, 1, uniform);
     }
 
     pub fn ivec2(self: Shader, name: [*]const u8, uniform: [*]const i32) void {
