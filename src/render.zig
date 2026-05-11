@@ -219,3 +219,20 @@ pub const Mesh = packed struct {
         gl.glDeleteVertexArrays(1, &self.id);
     }
 };
+
+const Framebuffer = struct {
+    id: u32,
+    
+    pub fn init() Framebuffer {
+        var id: u32 = 0;
+        gl.glGenFramebuffers(1, &id);
+
+        return .{
+            .id = id,
+        };
+    }
+
+    pub fn bind(self: Framebuffer) void {
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.id);
+    }
+};
