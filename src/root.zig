@@ -81,7 +81,7 @@ pub const Engine = struct {
     }
 };
 
-pub const GlWindow = extern struct {
+pub const Window = extern struct {
     window: *sdl.SDL_Window,
     gfx: sdl.SDL_GLContext,
     size: [2]i32,
@@ -93,7 +93,7 @@ pub const GlWindow = extern struct {
         SizeError,
     };
 
-    pub fn init(name: [*]const u8, size: ?[]const i32) !GlWindow {
+    pub fn init(name: [*]const u8, size: ?[]const i32) !Window {
         var win_type: u32 = sdl.SDL_WINDOW_FULLSCREEN;
         var w: i32 = 0;
         var h: i32 = 0;
@@ -114,7 +114,7 @@ pub const GlWindow = extern struct {
             if (!sdl.SDL_GetWindowSizeInPixels(window, &w, &h))
                 return Error.SizeError;
 
-            return GlWindow{
+            return Window{
                 .window = window,
                 .size = .{ w, h },
                 .gfx = gfx,
@@ -122,16 +122,16 @@ pub const GlWindow = extern struct {
         } else return Error.InitFailed;
     }
 
-    pub fn swap(self: *const GlWindow) !void {
+    pub fn swap(self: *const Window) !void {
         if (sdl.SDL_GL_SwapWindow(self.window)) return else return Error.SwapFailed;
     }
 
-    pub fn deinit(self: *const GlWindow) void {
+    pub fn deinit(self: *const Window) void {
         if (sdl.SDL_GL_DestroyContext(self.gfx)) {
             sdl.SDL_DestroyWindow(self.window);
             std.debug.print("window deinitialized\n", .{});
         } else {
-            @panic("Error deinitializing Gl context");
+            @panic("Error deinitializing  context");
         }
     }
 };

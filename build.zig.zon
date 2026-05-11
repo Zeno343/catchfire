@@ -1,6 +1,6 @@
 .{
     .name = .catchfire,
-    .version = "0.15.2",
+    .version = "0.0.1",
     .dependencies = .{
         .cimgui = .{
             .path = "./cimgui/",

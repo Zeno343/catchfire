@@ -4,7 +4,7 @@ const Render = ctcf.Render;
 const Uniform = Render.Uniform;
 const KeyboardEvent = ctcf.KeyboardEvent;
 const Engine = ctcf.Engine;
-const GlWindow = ctcf.GlWindow;
+const Window = ctcf.Window;
 
 const Gui = @import("cimgui").Gui;
 const cimgui = @import("cimgui").cimgui;
@@ -25,7 +25,7 @@ pub fn main() !void {
     const engine = try Engine.init();
     defer engine.deinit();
 
-    const window = try GlWindow.init("catchfire", &RESOLUTION);
+    const window = try Window.init("catchfire", &RESOLUTION);
     std.debug.print("window size: {}x{}\n", .{ window.size[0], window.size[1] });
     defer window.deinit();
 

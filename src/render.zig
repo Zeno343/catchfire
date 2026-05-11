@@ -226,7 +226,6 @@ const Framebuffer = struct {
     pub fn init() Framebuffer {
         var id: u32 = 0;
         gl.glGenFramebuffers(1, &id);
-
         return .{
             .id = id,
         };
