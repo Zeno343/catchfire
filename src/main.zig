@@ -20,7 +20,7 @@ pub fn main() !void {
 
     var args = std.process.args();
     _ = args.next();
-    const file_name = if (args.next()) |file| file else "src/shaders/color.frag";
+    const file_name = if (args.next()) |file| file else "src/shaders/uv.frag";
 
     const engine = try Engine.init();
     defer engine.deinit();
@@ -75,7 +75,7 @@ pub fn main() !void {
         mesh.bind();
         shader.bind();
         shader.vec3("rgb", &rgb);
-        shader.ivec2("resolution", &RESOLUTION);
+        shader.ivec2("u_resolution", &RESOLUTION);
         mesh.draw(0, 3, Render.Topology.Triangles);
 
         gui.frame();
