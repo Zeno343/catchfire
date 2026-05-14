@@ -30,7 +30,7 @@ pub const Gui = struct {
             .io = io,
         };
     }
-    
+
     pub fn handleEvent(_: Gui, event: *anyopaque) void {
         _ = cimgui.ImGui_ImplSDL3_ProcessEvent(@ptrCast(event));
     }
@@ -49,18 +49,27 @@ pub const Gui = struct {
         cimgui.igEnd();
     }
 
-    pub fn fileMenu(_: Gui, name: [*]const u8) !void {
+    pub fn fileMenu(_: Gui, name: [*]const u8, dir: std.fs.Dir) ?std.fs.File {
         _ = cimgui.igBegin(name, null, 0);
-        var dir = try std.fs.cwd().openDir("src/shaders", .{ .iterate = true, });
-        defer dir.close();
-        var iter = dir.iterate(); 
+        var iter = dir.iterate();
+        var selection: ?std.fs.File = null;
+        while (iter.next()) |file| {
+            const filename = (file orelse break).name;
+            var buf = [_]u8{0} ** 100;
+            const result = std.fmt.bufPrint(&buf, "{s}\n", .{filename}) catch |err| log_error: {
+                std.debug.print("{}\n", .{err});
+                break :log_error "error";
+            };
 
-        while (try iter.next()) |file| {
-            var buf = [_]u8{0} ** 100; 
-            const result = try std.fmt.bufPrint(&buf, "{s}\n", .{file.name});
-            cimgui.igText(result.ptr);
+            if (cimgui.igButton(result.ptr, .{ .x = 0, .y = 0})) {
+                std.debug.print("file selected: {s}\n", .{filename});
+                selection = std.fs.cwd().openFile(filename, .{}) catch null;
+            }
+        } else |err| {
+            std.debug.print("{}\n", .{err});
         }
         _ = cimgui.igEnd();
+        return selection;
     }
 
     pub fn draw(_: Gui) void {

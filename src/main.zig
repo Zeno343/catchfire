@@ -18,10 +18,6 @@ pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.c_allocator);
     defer arena.deinit();
 
-    var args = std.process.args();
-    _ = args.next();
-    const file_name = if (args.next()) |file| file else "src/shaders/uv.frag";
-
     const engine = try Engine.init();
     defer engine.deinit();
 
@@ -32,7 +28,7 @@ pub fn main() !void {
     const gui = try Gui.init(@ptrCast(window.window), @ptrCast(window.gfx));
     defer gui.deinit();
 
-    const file = try std.fs.cwd().openFile(file_name, .{});
+    const file = try std.fs.cwd().openFile("src/shaders/uv.frag", .{}) ;
     const contents = try file.readToEndAlloc(arena.allocator(), std.math.maxInt(usize));
     var shader = try Render.Shader.compile(VERT_SOURCE, contents.ptr);
     defer shader.deinit();
@@ -56,20 +52,7 @@ pub fn main() !void {
     var quit = false;
     // var position = [2]f32{ 0.0, 0.0 };
     var rgb = [3]f32{ 0.0, 0.0, 0.0 };
-    var mtime: i128 = 0;
     while (!quit) {
-        const stat = try std.fs.cwd().statFile(file_name);
-
-        if (mtime != stat.mtime) {
-            mtime = stat.mtime;
-            std.debug.print("file changed\n", .{});
-
-            const _file = try std.fs.cwd().openFile(file_name, .{});
-            const _contents = try file.readToEndAlloc(arena.allocator(), std.math.maxInt(usize));
-            shader = Render.Shader.compile(VERT_SOURCE, _contents.ptr) catch shader;
-            _file.close();
-        }
-
         Render.clear();
         vert_buf.bind();
         mesh.bind();
@@ -80,7 +63,14 @@ pub fn main() !void {
 
         gui.frame();
         gui.rgbSlider(&rgb);
-        try gui.fileMenu("shaders");
+
+        var dir = try std.fs.cwd().openDir("src/shaders", .{ .iterate = true, });
+        defer dir.close();
+        if (gui.fileMenu("shaders", dir)) |selected_file| {
+            const _contents = try selected_file.readToEndAlloc(arena.allocator(), std.math.maxInt(usize));
+            shader = Render.Shader.compile(VERT_SOURCE, _contents.ptr) catch shader;
+            selected_file.close();
+        }
         gui.draw();
 
         try window.swap();
