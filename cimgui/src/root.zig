@@ -1,3 +1,4 @@
+const std = @import("std");
 pub const cimgui = @cImport({
     @cDefine("CIMGUI_DEFINE_ENUMS_AND_STRUCTS", "1");
     @cDefine("CIMGUI_USE_SDL3", "1");
@@ -46,6 +47,20 @@ pub const Gui = struct {
         _ = cimgui.igSliderFloat("g:", &rgb[1], 0.0, 1.0, "%.3f", 1.0);
         _ = cimgui.igSliderFloat("b:", &rgb[2], 0.0, 1.0, "%.3f", 1.0);
         cimgui.igEnd();
+    }
+
+    pub fn fileMenu(_: Gui, name: [*]const u8) !void {
+        _ = cimgui.igBegin(name, null, 0);
+        var dir = try std.fs.cwd().openDir("src/shaders", .{ .iterate = true, });
+        defer dir.close();
+        var iter = dir.iterate(); 
+
+        while (try iter.next()) |file| {
+            var buf = [_]u8{0} ** 100; 
+            const result = try std.fmt.bufPrint(&buf, "{s}\n", .{file.name});
+            cimgui.igText(result.ptr);
+        }
+        _ = cimgui.igEnd();
     }
 
     pub fn draw(_: Gui) void {

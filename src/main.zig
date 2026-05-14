@@ -80,6 +80,7 @@ pub fn main() !void {
 
         gui.frame();
         gui.rgbSlider(&rgb);
+        try gui.fileMenu("shaders");
         gui.draw();
 
         try window.swap();
